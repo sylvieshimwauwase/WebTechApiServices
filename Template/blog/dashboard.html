@@ -1,0 +1,443 @@
+```html
+{% extends 'base_adminlte.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Row 1: Summary boxes -->
+<div class="row">
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>{{ total_posts }}</h3>
+                <p>Total Blog Posts</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <a href="{% url 'Blog_Post_Display' %}"
+               class="small-box-footer">
+                View posts <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>{{ total_categories }}</h3>
+                <p>Categories</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <a href="/admin/Blog/category/"
+               class="small-box-footer">
+                Manage categories
+                <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>{{ posts_this_month }}</h3>
+                <p>Posts this month</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <a href="{% url 'Blog_Post_Display' %}"
+               class="small-box-footer">
+
+                {% if month_change != None %}
+                    {% if month_change >= 0 %}
+                        <i class="fas fa-arrow-up"></i>
+                    {% else %}
+                        <i class="fas fa-arrow-down"></i>
+                    {% endif %}
+
+                    {{ month_change }}% vs last month
+                {% else %}
+                    See all
+                    <i class="fas fa-arrow-circle-right"></i>
+                {% endif %}
+
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3>{{ uncategorized }}</h3>
+                <p>Uncategorized Posts</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <a href="{% url 'Blog_Post_Display' %}"
+               class="small-box-footer">
+                Review <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Row 2: Charts -->
+<div class="row">
+
+    <!-- Monthly posts chart -->
+    <div class="col-lg-8">
+        <div class="card card-primary card-outline">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-bar mr-1"></i>
+                    Posts per Month (Last 6 Months)
+                </h3>
+
+                <div class="card-tools">
+                    <button type="button"
+                            class="btn btn-tool"
+                            data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div style="position: relative; height: 300px;">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category chart -->
+    <div class="col-lg-4">
+        <div class="card card-success card-outline">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-pie mr-1"></i>
+                    Posts by Category
+                </h3>
+
+                <div class="card-tools">
+                    <button type="button"
+                            class="btn btn-tool"
+                            data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% if total_posts %}
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center my-5">
+                        No data to chart yet.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Row 3: Recent posts and categories -->
+<div class="row">
+
+    <!-- Recent posts table -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-transparent">
+                <h3 class="card-title">
+                    <i class="fas fa-clock mr-1"></i>
+                    Latest Blog Posts
+                </h3>
+
+                <div class="card-tools">
+                    <button type="button"
+                            class="btn btn-tool"
+                            data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table m-0 table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Posted</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for post in recent_posts %}
+                                <tr>
+                                    <td>{{ post.id }}</td>
+                                    <td>{{ post.title }}</td>
+
+                                    <td>
+                                        {% if post.category %}
+                                            <span class="badge badge-info">
+                                                {{ post.category.name }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">
+                                                Uncategorized
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-muted">
+                                        {{ post.date_posted|date:"d M Y, H:i" }}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4"
+                                        class="text-center text-muted py-4">
+                                        No blog posts have been created yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card-footer clearfix">
+                <a href="/admin/Blog/post/add/"
+                   class="btn btn-sm btn-info float-left">
+                    <i class="fas fa-plus"></i> New Post
+                </a>
+
+                <a href="{% url 'Blog_Post_Display' %}"
+                   class="btn btn-sm btn-secondary float-right">
+                    View All Posts
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Right column -->
+    <div class="col-lg-4">
+
+        <!-- Category statistics -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-tags mr-1"></i>
+                    Top Categories
+                </h3>
+            </div>
+
+            <div class="card-body">
+                {% for c in category_stats %}
+                    <div class="mb-3">
+
+                        <div class="d-flex justify-content-between">
+                            <span>{{ c.name }}</span>
+                            <span class="text-muted">
+                                {{ c.post_count }}
+                                post{{ c.post_count|pluralize }}
+                            </span>
+                        </div>
+
+                        <div class="progress progress-sm">
+                            <div class="progress-bar bg-primary"
+                                 role="progressbar"
+                                 aria-valuenow="{{ c.percent }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+
+                    </div>
+                {% empty %}
+                    <p class="text-muted mb-0">
+                        No categories yet.
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+
+
+        <!-- Quick actions -->
+        <div class="card card-outline card-secondary">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt mr-1"></i>
+                    Quick Actions
+                </h3>
+            </div>
+
+            <div class="card-body">
+                <a href="/admin/Blog/post/add/"
+                   class="btn btn-block btn-primary">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add New Post
+                </a>
+
+                <a href="/admin/Blog/category/add/"
+                   class="btn btn-block btn-success">
+                    <i class="fas fa-tag mr-1"></i>
+                    Add New Category
+                </a>
+
+                <a href="{% url 'Blog_Post_Display' %}"
+                   class="btn btn-block btn-outline-secondary">
+                    <i class="fas fa-list mr-1"></i>
+                    Manage Posts
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Safely pass chart data from Django to JavaScript -->
+{{ chart_data|json_script:"chart-data" }}
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script src="{% static 'adminlte/plugins/chart.js/Chart.min.js' %}"></script>
+
+<script>
+$(document).ready(function () {
+
+    const chartElement = document.getElementById('chart-data');
+
+    if (!chartElement) {
+        console.error('Chart data was not found.');
+        return;
+    }
+
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js was not loaded.');
+        return;
+    }
+
+    const data = JSON.parse(chartElement.textContent);
+
+    const palette = [
+        '#007bff',
+        '#28a745',
+        '#ffc107',
+        '#dc3545',
+        '#17a2b8',
+        '#6f42c1',
+        '#fd7e14',
+        '#20c997',
+        '#6c757d'
+    ];
+
+
+    // Bar chart: Posts per month
+    const monthlyCanvas = document.getElementById('monthlyChart');
+
+    if (monthlyCanvas && data.monthly) {
+        new Chart(monthlyCanvas.getContext('2d'), {
+            type: 'bar',
+
+            data: {
+                labels: data.monthly.labels,
+                datasets: [{
+                    label: 'Posts',
+                    data: data.monthly.values,
+                    backgroundColor: 'rgba(0, 123, 255, 0.75)',
+                    borderColor: '#007bff',
+                    borderWidth: 1
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                legend: {
+                    display: false
+                },
+
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            precision: 0
+                        }
+                    }],
+
+                    xAxes: [{
+                        gridLines: {
+                            display: false
+                        }
+                    }]
+                }
+            }
+        });
+    }
+
+
+    // Doughnut chart: Posts by category
+    const categoryCanvas = document.getElementById('categoryChart');
+
+    if (
+        categoryCanvas &&
+        data.categories &&
+        data.categories.values &&
+        data.categories.values.length > 0
+    ) {
+        new Chart(categoryCanvas.getContext('2d'), {
+            type: 'doughnut',
+
+            data: {
+                labels: data.categories.labels,
+
+                datasets: [{
+                    data: data.categories.values,
+                    backgroundColor: data.categories.labels.map(
+                        function (label, index) {
+                            return palette[index % palette.length];
+                        }
+                    )
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        });
+    }
+
+});
+</script>
+
+{% endblock %}
+```

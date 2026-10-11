@@ -1,0 +1,42 @@
+<html>
+    <head>
+         <meta charset="utf-8">
+         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+         <title></title>
+         <meta name="description" content="">
+         <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    </head>
+    <body>
+        <p>This is a page to display Students' Marks</p>
+        <table border="1">
+            <tr>
+                <th>Name</th>
+                <th>Reg No</th>
+                <th>Marks</th>
+            </tr>
+            {% for name,regno,marks in student_marks %}
+            <tr>
+                <td>{{name}}</td>
+                <td>{{regno}}</td>
+                <td>{{marks}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <table border="1">
+            <tr>
+                <th>Name</th>
+                <th>Reg No</th>
+                <th>Marks</th>
+            </tr>
+            {% for n in json_data %}
+            <tr>
+                <td>{{n.name}}</td>
+                <td>{{n.regno}}</td>
+                <td>{{n.marks}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
